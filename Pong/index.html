@@ -1,0 +1,186 @@
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Canvas Pong</title>
+    <link rel="stylesheet" href="css/stylesheet.css">
+
+</head>
+<body>
+<center>
+<canvas id="MitCanvas" width="480" height="720"></canvas>
+</center>
+<script>
+
+    var canvas = document.getElementById("MitCanvas");
+    var ctx = canvas.getContext("2d");
+    var boldRadius = 10;
+    var x = canvas.width/2;
+    var y = canvas.height-30;
+    var dx = 4;
+    var dy = -4;
+    var bratHøjde = 10;
+    var bratBredde = 75;
+    var paddleX = (canvas.width-bratBredde)/2;
+    var højreAktiv = false;
+    var venstreAktiv = false;
+    var klodsRowCount = 5;
+    var klodsColumnCount = 3;
+    var klodsWidth = 75;
+    var klodsHeight = 20;
+    var klodsPadding = 10;
+    var klodsOffsetTop = 30;
+    var klodsOffsetLeft = 30;
+    var point = 0;
+    var liv = 3;
+    
+    var klodss = [];
+    for(c=0; c<klodsColumnCount; c++) {
+        klodss[c] = [];
+        for(r=0; r<klodsRowCount; r++) {
+            klodss[c][r] = { x: 0, y: 0, status: 1 };
+        }
+    }
+    
+    document.addEventListener("keydown", keyDownHandler, false);
+    document.addEventListener("keyup", keyUpHandler, false);
+    document.addEventListener("mousemove", mouseMoveHandler, false);
+    
+    function keyDownHandler(e) {
+        if(e.keyCode == 39) {
+            højreAktiv = true;
+        }
+        else if(e.keyCode == 37) {
+            venstreAktiv = true;
+        }
+    }
+    function keyUpHandler(e) {
+        if(e.keyCode == 39) {
+            højreAktiv = false;
+        }
+        else if(e.keyCode == 37) {
+            venstreAktiv = false;
+        }
+    }
+    function mouseMoveHandler(e) {
+        var relativeX = e.clientX - canvas.offsetLeft;
+        if(relativeX > 0 && relativeX < canvas.width) {
+            paddleX = relativeX - bratBredde/2;
+        }
+    }
+    function anstodsensor() {
+        for(c=0; c<klodsColumnCount; c++) {
+            for(r=0; r<klodsRowCount; r++) {
+                var b = klodss[c][r];
+                if(b.status == 1) {
+                    if(x > b.x && x < b.x+klodsWidth && y > b.y && y < b.y+klodsHeight) {
+                        dy = -dy;
+                        b.status = 0;
+                        point++;
+                        if(point == klodsRowCount*klodsColumnCount) {
+                            alert("Du vandt tilykke.");
+                            document.location.reload();
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    function tegnBall() {
+        ctx.beginPath();
+        ctx.arc(x, y, boldRadius, 0, Math.PI*2);
+        ctx.fillStyle = "#e1e1e1";
+        ctx.fill();
+        ctx.closePath();
+    }
+    function tegnPaddle() {
+        ctx.beginPath();
+        ctx.rect(paddleX, canvas.height-bratHøjde, bratBredde, bratHøjde);
+        ctx.fillStyle = "#e1e1e1";
+        ctx.fill();
+        ctx.closePath();
+    }
+    function tegnBricks() {
+        for(c=0; c<klodsColumnCount; c++) {
+            for(r=0; r<klodsRowCount; r++) {
+                if(klodss[c][r].status == 1) {
+                    var klodsX = (r*(klodsWidth+klodsPadding))+klodsOffsetLeft;
+                    var klodsY = (c*(klodsHeight+klodsPadding))+klodsOffsetTop;
+                    klodss[c][r].x = klodsX;
+                    klodss[c][r].y = klodsY;
+                    ctx.beginPath();
+                    ctx.rect(klodsX, klodsY, klodsWidth, klodsHeight);
+                    ctx.fillStyle = "#e1e1e1";
+                    ctx.fill();
+                    ctx.closePath();
+                }
+            }
+        }
+    }
+    function tegnScore() {
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#e1e1e1";
+        ctx.fillText("Score: "+point, 8, 20);
+    }
+    function tegnLives() {
+        ctx.font = "16px Arial";
+        ctx.fillStyle = "#e1e1e1";
+        ctx.fillText("Lives: "+liv, canvas.width-65, 20);
+    }
+    
+    function tegn() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        tegnBricks();
+        tegnBall();
+        tegnPaddle();
+        tegnScore();
+        tegnLives();
+        anstodsensor();
+        
+        if(x + dx > canvas.width-boldRadius || x + dx < boldRadius) {
+            dx = -dx;
+        }
+        if(y + dy < boldRadius) {
+            dy = -dy;
+        }
+        else if(y + dy > canvas.height-boldRadius) {
+            if(x > paddleX && x < paddleX + bratBredde) {
+                dy = -dy;
+            }
+            else {
+                liv--;
+                if(!liv) {
+                    alert("DU DØDE");
+                    document.location.reload();
+                }
+                else {
+                    x = canvas.width/2;
+                    y = canvas.height-30;
+                    dx = 4;
+                    dy = -4;
+                    paddleX = (canvas.width-bratBredde)/2;
+                }
+            }
+        }
+        
+        if(højreAktiv && paddleX < canvas.width-bratBredde) {
+            paddleX += 7;
+        }
+        else if(venstreAktiv && paddleX > 0) {
+            paddleX -= 7;
+        }
+        
+        x += dx;
+        y += dy;
+        requestAnimationFrame(tegn);
+    }
+    
+    tegn();
+</script>
+
+</body>
+</html>
+
